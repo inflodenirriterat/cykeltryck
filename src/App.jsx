@@ -198,7 +198,19 @@ export default function CykelTryck() {
           </div>
         </div>
 
-        <div style={{ fontSize:11, color:BR, textAlign:"center", marginTop:24 }}>
+        <a href="https://apps.apple.com/app/carbplanner" target="_blank" rel="noopener noreferrer"
+          style={{ display:"block", textDecoration:"none", marginTop:24, background:S1, border:`1px solid ${BR}`, borderRadius:14, padding:"14px 18px" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+            <div style={{ fontSize:28 }}>🥗</div>
+            <div style={{ textAlign:"left" }}>
+              <div style={{ fontSize:13, fontWeight:600, color:"#fff" }}>CarbPlanner</div>
+              <div style={{ fontSize:12, color:MT, marginTop:2 }}>Räkna kolhydrater enkelt — min andra app, finns på App Store</div>
+            </div>
+            <div style={{ marginLeft:"auto", fontSize:18, color:MT }}>›</div>
+          </div>
+        </a>
+
+        <div style={{ fontSize:11, color:BR, textAlign:"center", marginTop:16 }}>
           CykelTryck · Beräkningar baserade på vikt, däckbredd &amp; underlag
         </div>
       </div>
