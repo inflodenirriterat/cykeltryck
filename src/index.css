@@ -1,3 +1,39 @@
+:root {
+  --bg:           #F8F7F5;
+  --card:         #FFFFFF;
+  --card-b:       #F0EDE8;
+  --accent:       #1B4D52;
+  --accent-bg:    rgba(27, 77, 82, 0.12);
+  --text:         #1C1814;
+  --text-m:       #8A7E72;
+  --border:       #E4DDD6;
+  --h-grad:       linear-gradient(170deg, #1B4D52 0%, #133840 100%);
+  --h-text:       #FFFFFF;
+  --h-text-soft:  rgba(255, 255, 255, 0.70);
+  --h-card:       rgba(255, 255, 255, 0.10);
+  --h-border:     rgba(255, 255, 255, 0.12);
+  --accent-line:  rgba(255, 255, 255, 0.50);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:           #0E0C0A;
+    --card:         #1C1915;
+    --card-b:       #1C1915;
+    --accent:       #3A8A92;
+    --accent-bg:    rgba(58, 138, 146, 0.14);
+    --text:         #F2EDE8;
+    --text-m:       #8A8078;
+    --border:       #2E2820;
+    --h-grad:       linear-gradient(170deg, #1B4D52 0%, #0E282C 100%);
+    --h-text:       #F2EDE8;
+    --h-text-soft:  rgba(242, 237, 232, 0.65);
+    --h-card:       rgba(255, 255, 255, 0.06);
+    --h-border:     rgba(255, 255, 255, 0.10);
+    --accent-line:  rgba(58, 138, 146, 0.60);
+  }
+}
+
 body {
   margin: 0;
 }
