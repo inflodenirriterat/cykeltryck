@@ -37,3 +37,11 @@
 body {
   margin: 0;
 }
+
+.app-header {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.app-bottom {
+  padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+}

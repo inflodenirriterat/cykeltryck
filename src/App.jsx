@@ -104,9 +104,9 @@ export default function CykelTryck() {
 
   return (
     <div style={{ background:"var(--bg)", minHeight:"100vh", color:"var(--text)", fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif", fontSize:16 }}>
-      <div style={{ maxWidth:460, margin:"0 auto", padding:"0 16px 60px" }}>
+      <div className="app-bottom" style={{ maxWidth:460, margin:"0 auto", padding:"0 16px 0" }}>
 
-        <div style={{ background:"var(--h-grad)", margin:"0 -16px", padding:"32px 16px 24px", marginBottom:16 }}>
+        <div className="app-header" style={{ background:"var(--h-grad)", margin:"0 -16px", padding:"32px 16px 24px", marginBottom:16 }}>
           <div style={{ textAlign:"center" }}>
             <div style={{ fontSize:30, fontWeight:800, letterSpacing:5, color:"var(--h-text)" }}>CYKELTRYCK</div>
             <div style={{ fontSize:11, color:"var(--h-text-soft)", letterSpacing:1, marginTop:5, textTransform:"uppercase" }}>Rätt tryck · Bättre rull · Färre punkteringar</div>
@@ -235,7 +235,7 @@ export default function CykelTryck() {
           </div>
         </a>
 
-        <div style={{ fontSize:11, color:"var(--border)", textAlign:"center", marginTop:16 }}>
+        <div style={{ fontSize:11, color:"var(--text-m)", textAlign:"center", marginTop:16, marginBottom:24 }}>
           CykelTryck · Beräkningar baserade på vikt, däckbredd &amp; underlag
         </div>
 
