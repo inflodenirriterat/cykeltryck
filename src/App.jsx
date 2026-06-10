@@ -1,26 +1,33 @@
 import { useState } from "react";
 
-const SPLITS = { road:{f:0.42,r:0.58}, gravel:{f:0.44,r:0.56}, mtb:{f:0.46,r:0.54}, city:{f:0.42,r:0.58} };
-const KK     = { road:{f:99,r:102}, gravel:{f:82,r:85}, mtb:{f:58,r:62}, city:{f:110,r:114} };
-const SM     = { asphalt:1.0, mixed:0.88, offroad:0.74 };
-const FL     = { road:40, gravel:18, mtb:10, city:28 };
-const CE     = { road:120, gravel:75, mtb:50, city:90 };
+// Tryckmodell: P ∝ systemvikt / däckbredd^1.5 — följer Frank Bertos
+// 15 % tire drop-data (validerad 20–37 mm) och är kalibrerad mot
+// SRAM AXS/Silca-rekommendationer vid 85 kg systemvikt (tubeless, asfalt).
+// Fram/bak-skillnaden hålls liten (≈ ±4 %) i linje med SRAM:s riktlinje
+// om 3–7 psi mellanskillnad, i stället för att skala rakt av lastfördelningen.
+const REF_WEIGHT = 85;   // kg systemvikt där basvärdet gäller
+const BASE_K     = 10400; // ger ~70 psi för 28 mm vid 85 kg
+const SPLITS = { road:{f:0.96,r:1.04}, gravel:{f:0.96,r:1.04}, mtb:{f:0.96,r:1.04}, city:{f:0.93,r:1.07} };
+const SM     = { asphalt:1.0, mixed:0.92, offroad:0.84 };
+const TUBE_FACTOR = 1.08; // SRAM: +4–6 psi med slang för att undvika snake bites
+const FL     = { road:35, gravel:18, mtb:12, city:28 };
+const CE     = { road:110, gravel:70, mtb:40, city:85 };
+const HOOKLESS_LIMIT_PSI = 72.5;
 
 function calcP(bw, biw, bt, tw, sf, tl) {
-  const tot = bw + biw;
-  const sp  = SPLITS[bt];
-  const we  = Math.pow(tw, 0.75);
-  let fP    = KK[bt].f * Math.sqrt(tot * sp.f * 2.205) / we;
-  let rP    = KK[bt].r * Math.sqrt(tot * sp.r * 2.205) / we;
-  fP *= SM[sf]; rP *= SM[sf];
-  if (tl) { fP *= 0.9; rP *= 0.9; }
-  fP = Math.max(FL[bt], Math.min(CE[bt], fP));
-  rP = Math.max(FL[bt], Math.min(CE[bt], rP));
+  const tot  = bw + biw;
+  const base = BASE_K / Math.pow(tw, 1.5) * (tot / REF_WEIGHT) * SM[sf] * (tl ? 1 : TUBE_FACTOR);
+  let fP = base * SPLITS[bt].f;
+  let rP = base * SPLITS[bt].r;
+  const capped = rP > CE[bt] || fP > CE[bt];
+  fP = Math.round(Math.max(FL[bt], Math.min(CE[bt], fP)));
+  rP = Math.round(Math.max(FL[bt], Math.min(CE[bt], rP)));
   return {
-    fBar: (Math.round(fP * 0.06895 * 10) / 10).toFixed(1),
-    rBar: (Math.round(rP * 0.06895 * 10) / 10).toFixed(1),
-    fPsi: Math.round(fP),
-    rPsi: Math.round(rP),
+    fBar: (fP * 0.06895).toFixed(1),
+    rBar: (rP * 0.06895).toFixed(1),
+    fPsi: fP,
+    rPsi: rP,
+    capped,
   };
 }
 
@@ -57,10 +64,10 @@ function SegBtn({ active, onClick, emoji, label }) {
   );
 }
 
-function Toggle({ on, onToggle }) {
+function Toggle({ on, onToggle, label }) {
   return (
-    <div onClick={onToggle} style={{
-      width:46, height:26,
+    <button onClick={onToggle} role="switch" aria-checked={on} aria-label={label} style={{
+      width:46, height:26, padding:0,
       background: on ? "var(--accent-bg)" : "var(--card-b)",
       border: `1px solid ${on ? "var(--accent)" : "var(--border)"}`,
       borderRadius: 13, cursor: "pointer", position: "relative",
@@ -71,7 +78,7 @@ function Toggle({ on, onToggle }) {
         background: on ? "var(--accent)" : "var(--text-m)",
         top:2, left: on ? 22 : 2, transition: "left 0.2s",
       }} />
-    </div>
+    </button>
   );
 }
 
@@ -91,13 +98,14 @@ export default function CykelTryck() {
   const [sf,  setSf]  = useState("asphalt");
   const [tl,  setTl]  = useState(false);
 
-  const { fBar, rBar, fPsi, rPsi } = calcP(bw, biw, bt, tw, sf, tl);
+  const { fBar, rBar, fPsi, rPsi, capped } = calcP(bw, biw, bt, tw, sf, tl);
   const total = bw + biw;
 
-  const tip = tl ? "Tubeless låter dig köra lägre tryck utan punkteringsrisk."
+  const tip = capped ? "Nära övre gränsen – överskrid aldrig max-trycket som står på däckets sida."
+    : Math.max(fPsi, rPsi) > HOOKLESS_LIMIT_PSI ? "Över 72,5 psi: kör inte så högt på hookless-fälgar, och kontrollera däckets max-tryck."
+    : tl ? "Tubeless låter dig köra lägre tryck med mindre risk för punktering."
     : sf === "offroad" ? "Lägre tryck ger bättre grepp och komfort i terräng."
-    : bt === "road" && tw >= 32 ? "Bredare däck → mer komfort och lägre rullmotstånd."
-    : total > 110 ? "Hög totalvikt – kontrollera max-trycket på däckets sida."
+    : bt === "road" && tw >= 32 ? "Bredare däck → mer komfort utan att rulla långsammare."
     : "Kontrollera alltid trycket innan varje tur!";
 
   const PRESETS = [23,25,28,32,35,38,42,50,57];
@@ -185,7 +193,7 @@ export default function CykelTryck() {
               <div style={{ fontSize:15, fontWeight:500 }}>Tubeless</div>
               <div style={{ fontSize:12, color:"var(--text-m)", marginTop:2 }}>Kör du utan slang?</div>
             </div>
-            <Toggle on={tl} onToggle={() => setTl(v => !v)} />
+            <Toggle on={tl} onToggle={() => setTl(v => !v)} label="Tubeless" />
           </div>
         </Card>
 
@@ -223,6 +231,7 @@ export default function CykelTryck() {
           </div>
         </div>
 
+        {/* TODO: CarbPlanner är inte publicerad än — byt till riktig URL (apps.apple.com/se/app/carbplanner/idXXXXXXXXX) vid release */}
         <a href="https://apps.apple.com/app/carbplanner" target="_blank" rel="noopener noreferrer"
           style={{ display:"block", textDecoration:"none", marginTop:24, background:"var(--card)", border:"1px solid var(--border)", borderRadius:14, padding:"14px 18px" }}>
           <div style={{ display:"flex", alignItems:"center", gap:12 }}>
