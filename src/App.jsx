@@ -1,18 +1,32 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const LANG = (typeof navigator !== "undefined" && (navigator.language || "")).toLowerCase().startsWith("sv") ? "sv" : "en";
+const PSI_PRIMARY = LANG === "en";
 
 const STRINGS = {
   sv: {
     title: "CYKELTRYCK", brand: "CykelTryck",
     tagline: "Rätt tryck · Bättre rull · Färre punkteringar",
+    bikes: "Mina cyklar", name: "Namn", remove: "Ta bort",
+    removeConfirm: "Ta bort den här cykeln?",
+    bikeWord: "Cykel", defaultBike: "Min cykel",
     weight: "Vikt", bodyWeight: "Kroppsvikt", bikeGear: "Cykel + gear", totalWeight: "Totalvikt",
     bikeType: "Cykeltyp", road: "Landsväg", gravel: "Gravel", mtb: "MTB", city: "Stad/Hybrid",
     tireWidth: "Däckbredd", tubeless: "Tubeless", tubelessSub: "Kör du utan slang?",
     surface: "Underlag", asphalt: "Asfalt", mixed: "Blandat", offroad: "Grus/Trail",
+    tune: "Finjustering", comfort: "Komfort", speed: "Fart",
     recommended: "Rekommenderat lufttryck", front: "Fram", rear: "Bak", tipLabel: "Tips:",
+    whyTitle: "Varför detta tryck?",
+    whyBody: [
+      "Målet är cirka 15 % nedsjunkning av däcket under belastning. Publicerade mätningar visar att det ger den bästa balansen mellan rullmotstånd, komfort och grepp.",
+      "Bredare däck behöver lägre tryck för samma nedsjunkning – därför sjunker rekommendationen snabbt när däckbredden ökar.",
+      "Bakhjulet bär mer av din vikt än framhjulet och får därför något högre tryck.",
+      "Tubeless kan köras med lägre tryck eftersom det inte finns någon slang som kan klämmas mot fälgen (snake bite).",
+      "På ojämnt underlag ger lägre tryck bättre grepp och komfort – och ofta även lägre rullmotstånd, eftersom däcket följer ytan i stället för att studsa.",
+    ],
     carbDesc: "Räkna kolhydrater enkelt — min andra app, finns på App Store",
     footer: "Beräkningar baserade på vikt, däckbredd & underlag",
+    disclaimer: "Rekommendationerna är vägledande. Följ alltid min- och max-tryck angivna av däck- och fälgtillverkaren.",
     decimal: ",",
     tips: {
       capped: "Nära övre gränsen – överskrid aldrig max-trycket som står på däckets sida.",
@@ -26,17 +40,30 @@ const STRINGS = {
   en: {
     title: "BIKEPRESSURE", brand: "BikePressure",
     tagline: "Right pressure · Better rolling · Fewer flats",
+    bikes: "My bikes", name: "Name", remove: "Remove",
+    removeConfirm: "Remove this bike?",
+    bikeWord: "Bike", defaultBike: "My bike",
     weight: "Weight", bodyWeight: "Body weight", bikeGear: "Bike + gear", totalWeight: "Total weight",
     bikeType: "Bike type", road: "Road", gravel: "Gravel", mtb: "MTB", city: "City/Hybrid",
     tireWidth: "Tire width", tubeless: "Tubeless", tubelessSub: "Running without tubes?",
     surface: "Surface", asphalt: "Asphalt", mixed: "Mixed", offroad: "Gravel/Trail",
+    tune: "Fine-tune", comfort: "Comfort", speed: "Speed",
     recommended: "Recommended pressure", front: "Front", rear: "Rear", tipLabel: "Tip:",
+    whyTitle: "Why this pressure?",
+    whyBody: [
+      "The target is roughly 15% tire drop under load. Published measurements show this gives the best balance of rolling resistance, comfort and grip.",
+      "Wider tires need lower pressure for the same tire drop – which is why the recommendation falls quickly as tire width grows.",
+      "The rear wheel carries more of your weight than the front, so it gets slightly higher pressure.",
+      "Tubeless can be run at lower pressure since there is no inner tube to pinch against the rim (snake bite).",
+      "On rough surfaces, lower pressure gives better grip and comfort – and often lower rolling resistance too, since the tire follows the surface instead of bouncing.",
+    ],
     carbDesc: "Easy carb counting — my other app, on the App Store",
     footer: "Calculations based on weight, tire width & surface",
+    disclaimer: "Recommendations are guidance only. Always follow the min and max pressures stated by your tire and rim manufacturer.",
     decimal: ".",
     tips: {
       capped: "Near the upper limit – never exceed the max pressure printed on the tire sidewall.",
-      hookless: "Above 5.0 bar (72.5 psi): don't run hookless rims this high, and check your tire's max pressure.",
+      hookless: "Above 72.5 psi (5.0 bar): don't run hookless rims this high, and check your tire's max pressure.",
       tubeless: "Tubeless lets you run lower pressure with less risk of flats.",
       offroad: "Lower pressure gives better grip and comfort off-road.",
       wide: "Wider tires → more comfort without rolling slower.",
@@ -66,9 +93,10 @@ const FL     = { road:35, gravel:18, mtb:12, city:28 };
 const CE     = { road:110, gravel:70, mtb:40, city:85 };
 const HOOKLESS_LIMIT_PSI = 72.5;
 
-function calcP(bw, biw, bt, tw, sf, tl) {
+function calcP(bw, biw, bt, tw, sf, tl, bias) {
   const tot  = bw + biw;
-  const base = BASE_K / Math.pow(tw, 1.5) * (tot / REF_WEIGHT) * SM[sf] * (tl ? 1 : TUBE_FACTOR);
+  const base = BASE_K / Math.pow(tw, 1.5) * (tot / REF_WEIGHT) * SM[sf]
+             * (tl ? 1 : TUBE_FACTOR) * (1 + bias / 100);
   let fP = base * SPLITS[bt].f;
   let rP = base * SPLITS[bt].r;
   const capped = rP > CE[bt] || fP > CE[bt];
@@ -81,6 +109,34 @@ function calcP(bw, biw, bt, tw, sf, tl) {
     rPsi: rP,
     capped,
   };
+}
+
+const STORE_KEY = "cykeltryck-v1";
+
+function defaultProfile(name) {
+  return { name, biw: 10.0, bt: "road", tw: 28, sf: "asphalt", tl: false, bias: 0 };
+}
+
+function loadStore() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STORE_KEY));
+    if (s && Array.isArray(s.profiles) && s.profiles.length) {
+      return {
+        bw: typeof s.bw === "number" ? s.bw : 75,
+        active: Math.min(Math.max(0, s.active | 0), s.profiles.length - 1),
+        opens: s.opens | 0,
+        profiles: s.profiles.map(p => ({ ...defaultProfile(T.defaultBike), ...p })),
+      };
+    }
+  } catch { /* korrupt lagring → börja om */ }
+  return null;
+}
+
+async function requestReview() {
+  try {
+    const { InAppReview } = await import("@capacitor-community/in-app-review");
+    await InAppReview.requestReview();
+  } catch { /* webbläge eller plugin saknas — hoppa över */ }
 }
 
 function Card({ children, style }) {
@@ -116,6 +172,20 @@ function SegBtn({ active, onClick, emoji, label }) {
   );
 }
 
+function Chip({ active, onClick, children }) {
+  return (
+    <button onClick={onClick} style={{
+      background: active ? "var(--accent-bg)" : "var(--card-b)",
+      border: `1px solid ${active ? "var(--accent)" : "var(--border)"}`,
+      borderRadius:8, padding:"6px 12px",
+      color: active ? "var(--accent)" : "var(--text-m)",
+      fontFamily:"inherit", fontSize:13, fontWeight:600, cursor:"pointer",
+    }}>
+      {children}
+    </button>
+  );
+}
+
 function Toggle({ on, onToggle, label }) {
   return (
     <button onClick={onToggle} role="switch" aria-checked={on} aria-label={label} style={{
@@ -143,14 +213,41 @@ function Slider({ min, max, value, step, onChange }) {
 }
 
 export default function CykelTryck() {
-  const [bw,  setBw]  = useState(75);
-  const [biw, setBiw] = useState(10.0);
-  const [bt,  setBt]  = useState("road");
-  const [tw,  setTw]  = useState(28);
-  const [sf,  setSf]  = useState("asphalt");
-  const [tl,  setTl]  = useState(false);
+  const [store, setStore] = useState(() => {
+    const s = loadStore() ?? { bw: 75, active: 0, opens: 0, profiles: [defaultProfile(T.defaultBike)] };
+    return { ...s, opens: s.opens + 1 };
+  });
+  const [whyOpen, setWhyOpen] = useState(false);
 
-  const { fBar, rBar, fPsi, rPsi, capped } = calcP(bw, biw, bt, tw, sf, tl);
+  useEffect(() => {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch { /* lagring full/avstängd */ }
+  }, [store]);
+
+  useEffect(() => {
+    if (store.opens === 3) requestReview();
+  }, [store.opens]);
+
+  const p = store.profiles[store.active];
+  const setP  = patch => setStore(s => ({ ...s, profiles: s.profiles.map((pr, i) => i === s.active ? { ...pr, ...patch } : pr) }));
+  const setBw = v => setStore(s => ({ ...s, bw: v }));
+
+  const addProfile = () => setStore(s => ({
+    ...s,
+    profiles: [...s.profiles, { ...s.profiles[s.active], name: `${T.bikeWord} ${s.profiles.length + 1}` }],
+    active: s.profiles.length,
+  }));
+
+  const removeProfile = () => {
+    if (!window.confirm(T.removeConfirm)) return;
+    setStore(s => {
+      const profiles = s.profiles.filter((_, i) => i !== s.active);
+      return { ...s, profiles, active: Math.max(0, s.active - 1) };
+    });
+  };
+
+  const { bw } = store;
+  const { biw, bt, tw, sf, tl, bias } = p;
+  const { fBar, rBar, fPsi, rPsi, capped } = calcP(bw, biw, bt, tw, sf, tl, bias);
   const total = bw + biw;
 
   const tip = T.tips[
@@ -164,6 +261,11 @@ export default function CykelTryck() {
 
   const PRESETS = [23,25,28,32,35,38,42,47,50,57,61,66];
 
+  const fBig = PSI_PRIMARY ? fPsi : fBar;
+  const rBig = PSI_PRIMARY ? rPsi : rBar;
+  const fSub = PSI_PRIMARY ? <>psi / <strong style={{ color:"var(--h-text)" }}>{fBar}</strong> bar</> : <>bar / <strong style={{ color:"var(--h-text)" }}>{fPsi}</strong> psi</>;
+  const rSub = PSI_PRIMARY ? <>psi / <strong style={{ color:"var(--h-text)" }}>{rBar}</strong> bar</> : <>bar / <strong style={{ color:"var(--h-text)" }}>{rPsi}</strong> psi</>;
+
   return (
     <div style={{ background:"var(--bg)", minHeight:"100vh", color:"var(--text)", fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif", fontSize:16 }}>
       <div className="app-bottom" style={{ maxWidth:460, margin:"0 auto", padding:"0 16px 0" }}>
@@ -174,6 +276,34 @@ export default function CykelTryck() {
             <div style={{ fontSize:11, color:"var(--h-text-soft)", letterSpacing:1, marginTop:5, textTransform:"uppercase" }}>{T.tagline}</div>
           </div>
         </div>
+
+        <Card>
+          <CardTitle>{T.bikes}</CardTitle>
+          <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+            {store.profiles.map((pr, i) => (
+              <Chip key={i} active={i === store.active} onClick={() => setStore(s => ({ ...s, active: i }))}>
+                {pr.name}
+              </Chip>
+            ))}
+            <Chip active={false} onClick={addProfile}>＋</Chip>
+          </div>
+          <div style={{ display:"flex", alignItems:"center", gap:10, marginTop:12, paddingTop:12, borderTop:"1px solid var(--border)" }}>
+            <span style={{ fontSize:12, color:"var(--text-m)" }}>{T.name}</span>
+            <input value={p.name} onChange={e => setP({ name: e.target.value })} style={{
+              flex:1, minWidth:0, background:"var(--card-b)", border:"1px solid var(--border)",
+              borderRadius:8, padding:"7px 10px", color:"var(--text)",
+              fontFamily:"inherit", fontSize:14, fontWeight:500, outline:"none",
+            }} />
+            {store.profiles.length > 1 && (
+              <button onClick={removeProfile} style={{
+                background:"none", border:"none", color:"#C0392B", cursor:"pointer",
+                fontFamily:"inherit", fontSize:13, fontWeight:600, padding:"7px 4px",
+              }}>
+                {T.remove}
+              </button>
+            )}
+          </div>
+        </Card>
 
         <Card>
           <CardTitle>{T.weight}</CardTitle>
@@ -193,7 +323,7 @@ export default function CykelTryck() {
               <div style={{ fontSize:38, fontWeight:800, color:"var(--accent)", lineHeight:1, marginBottom:8 }}>
                 {biw.toFixed(1)}<span style={{ fontSize:13, color:"var(--text-m)", fontWeight:400, marginLeft:3 }}>kg</span>
               </div>
-              <Slider min={5} max={30} value={biw} step={0.1} onChange={v => setBiw(parseFloat(v))} />
+              <Slider min={5} max={30} value={biw} step={0.1} onChange={v => setP({ biw: parseFloat(v) })} />
               <div style={{ display:"flex", justifyContent:"space-between", fontSize:11, color:"var(--text-m)", marginTop:3 }}>
                 <span>5</span><span>30 kg</span>
               </div>
@@ -207,10 +337,10 @@ export default function CykelTryck() {
         <Card>
           <CardTitle>{T.bikeType}</CardTitle>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
-            <SegBtn active={bt==="road"}   onClick={() => setBt("road")}   emoji="🚴"  label={T.road} />
-            <SegBtn active={bt==="gravel"} onClick={() => setBt("gravel")} emoji="🛤️" label={T.gravel} />
-            <SegBtn active={bt==="mtb"}    onClick={() => setBt("mtb")}    emoji="🚵"  label={T.mtb} />
-            <SegBtn active={bt==="city"}   onClick={() => setBt("city")}   emoji="🏙️" label={T.city} />
+            <SegBtn active={bt==="road"}   onClick={() => setP({ bt: "road" })}   emoji="🚴"  label={T.road} />
+            <SegBtn active={bt==="gravel"} onClick={() => setP({ bt: "gravel" })} emoji="🛤️" label={T.gravel} />
+            <SegBtn active={bt==="mtb"}    onClick={() => setP({ bt: "mtb" })}    emoji="🚵"  label={T.mtb} />
+            <SegBtn active={bt==="city"}   onClick={() => setP({ bt: "city" })}   emoji="🏙️" label={T.city} />
           </div>
         </Card>
 
@@ -218,7 +348,7 @@ export default function CykelTryck() {
           <CardTitle>{T.tireWidth}</CardTitle>
           <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:14 }}>
             {PRESETS.map(v => (
-              <button key={v} onClick={() => setTw(v)} style={{
+              <button key={v} onClick={() => setP({ tw: v })} style={{
                 background: tw===v ? "var(--accent-bg)" : "var(--card-b)",
                 border: `1px solid ${tw===v ? "var(--accent)" : "var(--border)"}`,
                 borderRadius:8, padding:"5px 9px",
@@ -235,7 +365,7 @@ export default function CykelTryck() {
               <div style={{ fontSize:11, color:"var(--text-m)" }}>mm{tw >= 45 ? ` · ${(tw / 25.4).toFixed(1).replace(".", T.decimal)}"` : ""}</div>
             </div>
             <div style={{ flex:1 }}>
-              <Slider min={18} max={75} value={tw} step={1} onChange={v => setTw(parseInt(v))} />
+              <Slider min={18} max={75} value={tw} step={1} onChange={v => setP({ tw: parseInt(v) })} />
               <div style={{ display:"flex", justifyContent:"space-between", fontSize:11, color:"var(--text-m)", marginTop:3 }}>
                 <span>18mm</span><span>75mm</span>
               </div>
@@ -247,16 +377,28 @@ export default function CykelTryck() {
               <div style={{ fontSize:15, fontWeight:500 }}>{T.tubeless}</div>
               <div style={{ fontSize:12, color:"var(--text-m)", marginTop:2 }}>{T.tubelessSub}</div>
             </div>
-            <Toggle on={tl} onToggle={() => setTl(v => !v)} label={T.tubeless} />
+            <Toggle on={tl} onToggle={() => setP({ tl: !tl })} label={T.tubeless} />
           </div>
         </Card>
 
         <Card>
           <CardTitle>{T.surface}</CardTitle>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8 }}>
-            <SegBtn active={sf==="asphalt"} onClick={() => setSf("asphalt")} emoji="🛣️"  label={T.asphalt} />
-            <SegBtn active={sf==="mixed"}   onClick={() => setSf("mixed")}   emoji="🌿"  label={T.mixed} />
-            <SegBtn active={sf==="offroad"} onClick={() => setSf("offroad")} emoji="🏔️" label={T.offroad} />
+            <SegBtn active={sf==="asphalt"} onClick={() => setP({ sf: "asphalt" })} emoji="🛣️"  label={T.asphalt} />
+            <SegBtn active={sf==="mixed"}   onClick={() => setP({ sf: "mixed" })}   emoji="🌿"  label={T.mixed} />
+            <SegBtn active={sf==="offroad"} onClick={() => setP({ sf: "offroad" })} emoji="🏔️" label={T.offroad} />
+          </div>
+        </Card>
+
+        <Card>
+          <CardTitle>{T.tune}</CardTitle>
+          <Slider min={-5} max={5} value={bias} step={1} onChange={v => setP({ bias: parseInt(v) })} />
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", fontSize:12, color:"var(--text-m)", marginTop:4 }}>
+            <span>← {T.comfort}</span>
+            <strong style={{ color: bias === 0 ? "var(--text-m)" : "var(--accent)", fontSize:13 }}>
+              {bias > 0 ? "+" : ""}{bias} %
+            </strong>
+            <span>{T.speed} →</span>
           </div>
         </Card>
 
@@ -270,20 +412,38 @@ export default function CykelTryck() {
           <div style={{ display:"flex", justifyContent:"center", alignItems:"stretch", margin:"16px 0", gap:0 }}>
             <div style={{ flex:1, textAlign:"center" }}>
               <div style={{ fontSize:11, textTransform:"uppercase", letterSpacing:1, color:"var(--h-text-soft)", marginBottom:4 }}>{T.front}</div>
-              <div style={{ fontSize:54, fontWeight:800, color:"var(--h-text)", lineHeight:1 }}>{fBar}</div>
-              <div style={{ fontSize:12, color:"var(--h-text-soft)", marginTop:4 }}>bar / <strong style={{ color:"var(--h-text)" }}>{fPsi}</strong> psi</div>
+              <div style={{ fontSize:54, fontWeight:800, color:"var(--h-text)", lineHeight:1 }}>{fBig}</div>
+              <div style={{ fontSize:12, color:"var(--h-text-soft)", marginTop:4 }}>{fSub}</div>
             </div>
             <div style={{ width:1, background:"var(--h-border)", margin:"0 20px" }} />
             <div style={{ flex:1, textAlign:"center" }}>
               <div style={{ fontSize:11, textTransform:"uppercase", letterSpacing:1, color:"var(--h-text-soft)", marginBottom:4 }}>{T.rear}</div>
-              <div style={{ fontSize:54, fontWeight:800, color:"var(--h-text)", lineHeight:1 }}>{rBar}</div>
-              <div style={{ fontSize:12, color:"var(--h-text-soft)", marginTop:4 }}>bar / <strong style={{ color:"var(--h-text)" }}>{rPsi}</strong> psi</div>
+              <div style={{ fontSize:54, fontWeight:800, color:"var(--h-text)", lineHeight:1 }}>{rBig}</div>
+              <div style={{ fontSize:12, color:"var(--h-text-soft)", marginTop:4 }}>{rSub}</div>
             </div>
           </div>
           <div style={{ fontSize:13, color:"var(--h-text-soft)", padding:"10px 14px", background:"var(--h-card)", borderRadius:8, textAlign:"left", lineHeight:1.6 }}>
             <strong style={{ color:"var(--h-text)" }}>{T.tipLabel}</strong> {tip}
           </div>
         </div>
+
+        <Card style={{ marginTop:12 }}>
+          <button onClick={() => setWhyOpen(v => !v)} aria-expanded={whyOpen} style={{
+            display:"flex", alignItems:"center", justifyContent:"space-between", width:"100%",
+            background:"none", border:"none", padding:0, cursor:"pointer",
+            fontFamily:"inherit", fontSize:15, fontWeight:600, color:"var(--text)",
+          }}>
+            {T.whyTitle}
+            <span style={{ color:"var(--text-m)", fontSize:13 }}>{whyOpen ? "▲" : "▼"}</span>
+          </button>
+          {whyOpen && (
+            <div style={{ marginTop:10 }}>
+              {T.whyBody.map((par, i) => (
+                <p key={i} style={{ fontSize:13, color:"var(--text-m)", lineHeight:1.6, margin:"8px 0 0" }}>{par}</p>
+              ))}
+            </div>
+          )}
+        </Card>
 
         {/* TODO: CarbPlanner är inte publicerad än — byt till riktig URL (apps.apple.com/se/app/carbplanner/idXXXXXXXXX) vid release */}
         <a href="https://apps.apple.com/app/carbplanner" target="_blank" rel="noopener noreferrer"
@@ -299,7 +459,8 @@ export default function CykelTryck() {
         </a>
 
         <div style={{ fontSize:11, color:"var(--text-m)", textAlign:"center", marginTop:16, marginBottom:24 }}>
-          {T.brand} · {T.footer}
+          <div>{T.brand} · {T.footer}</div>
+          <div style={{ marginTop:6, opacity:0.8 }}>{T.disclaimer}</div>
         </div>
 
       </div>
