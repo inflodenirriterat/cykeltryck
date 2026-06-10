@@ -102,7 +102,7 @@ export default function CykelTryck() {
   const total = bw + biw;
 
   const tip = capped ? "Nära övre gränsen – överskrid aldrig max-trycket som står på däckets sida."
-    : Math.max(fPsi, rPsi) > HOOKLESS_LIMIT_PSI ? "Över 72,5 psi: kör inte så högt på hookless-fälgar, och kontrollera däckets max-tryck."
+    : Math.max(fPsi, rPsi) > HOOKLESS_LIMIT_PSI ? "Över 5,0 bar (72,5 psi): kör inte så högt på hookless-fälgar, och kontrollera däckets max-tryck."
     : tl ? "Tubeless låter dig köra lägre tryck med mindre risk för punktering."
     : sf === "offroad" ? "Lägre tryck ger bättre grepp och komfort i terräng."
     : bt === "road" && tw >= 32 ? "Bredare däck → mer komfort utan att rulla långsammare."
