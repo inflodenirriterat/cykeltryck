@@ -108,7 +108,7 @@ export default function CykelTryck() {
     : bt === "road" && tw >= 32 ? "Bredare däck → mer komfort utan att rulla långsammare."
     : "Kontrollera alltid trycket innan varje tur!";
 
-  const PRESETS = [23,25,28,32,35,38,42,50,57];
+  const PRESETS = [23,25,28,32,35,38,42,47,50,57,61,66];
 
   return (
     <div style={{ background:"var(--bg)", minHeight:"100vh", color:"var(--text)", fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif", fontSize:16 }}>
@@ -178,12 +178,12 @@ export default function CykelTryck() {
           <div style={{ display:"flex", alignItems:"center", gap:14 }}>
             <div style={{ minWidth:52 }}>
               <div style={{ fontSize:30, fontWeight:800, color:"var(--accent)", lineHeight:1 }}>{tw}</div>
-              <div style={{ fontSize:11, color:"var(--text-m)" }}>mm</div>
+              <div style={{ fontSize:11, color:"var(--text-m)" }}>mm{tw >= 45 ? ` · ${(tw / 25.4).toFixed(1).replace(".", ",")}"` : ""}</div>
             </div>
             <div style={{ flex:1 }}>
-              <Slider min={18} max={70} value={tw} step={1} onChange={v => setTw(parseInt(v))} />
+              <Slider min={18} max={75} value={tw} step={1} onChange={v => setTw(parseInt(v))} />
               <div style={{ display:"flex", justifyContent:"space-between", fontSize:11, color:"var(--text-m)", marginTop:3 }}>
-                <span>18mm</span><span>70mm</span>
+                <span>18mm</span><span>75mm</span>
               </div>
             </div>
           </div>
