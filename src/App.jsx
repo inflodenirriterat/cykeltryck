@@ -3,6 +3,11 @@ import { useEffect, useState } from "react";
 const LANG = (typeof navigator !== "undefined" && (navigator.language || "")).toLowerCase().startsWith("sv") ? "sv" : "en";
 const PSI_PRIMARY = LANG === "en";
 
+// TODO vid CarbPlanner-release: byt till riktig URL med kampanjparametrar för
+// attribution i App Store Connect, t.ex.
+// https://apps.apple.com/se/app/carbplanner/idXXXXXXXXX?pt=<provider-id>&ct=cykeltryck
+const CARBPLANNER_URL = "https://apps.apple.com/app/carbplanner";
+
 const STRINGS = {
   sv: {
     title: "CYKELTRYCK", brand: "CykelTryck",
@@ -24,6 +29,10 @@ const STRINGS = {
       "Tubeless kan köras med lägre tryck eftersom det inte finns någon slang som kan klämmas mot fälgen (snake bite).",
       "På ojämnt underlag ger lägre tryck bättre grepp och komfort – och ofta även lägre rullmotstånd, eftersom däcket följer ytan i stället för att studsa.",
     ],
+    fuelTitle: "Bränsle för turen", rideLength: "Turlängd",
+    fuelShort: "Under en timme behövs normalt inget extra bränsle – vatten räcker.",
+    fuelCarbs: "g kolhydrater", fuelPerH: "g/tim",
+    fuelCta: "Planera bränslet i CarbPlanner",
     carbDesc: "Räkna kolhydrater enkelt — min andra app, finns på App Store",
     footer: "Beräkningar baserade på vikt, däckbredd & underlag",
     disclaimer: "Rekommendationerna är vägledande. Följ alltid min- och max-tryck angivna av däck- och fälgtillverkaren.",
@@ -57,6 +66,10 @@ const STRINGS = {
       "Tubeless can be run at lower pressure since there is no inner tube to pinch against the rim (snake bite).",
       "On rough surfaces, lower pressure gives better grip and comfort – and often lower rolling resistance too, since the tire follows the surface instead of bouncing.",
     ],
+    fuelTitle: "Fuel for the ride", rideLength: "Ride length",
+    fuelShort: "Under an hour you normally don't need extra fuel – water is enough.",
+    fuelCarbs: "g carbs", fuelPerH: "g/h",
+    fuelCta: "Plan your fueling in CarbPlanner",
     carbDesc: "Easy carb counting — my other app, on the App Store",
     footer: "Calculations based on weight, tire width & surface",
     disclaimer: "Recommendations are guidance only. Always follow the min and max pressures stated by your tire and rim manufacturer.",
@@ -111,6 +124,15 @@ function calcP(bw, biw, bt, tw, sf, tl, bias) {
   };
 }
 
+// Kolhydratintag per timme enligt gällande idrottsnutritionsriktlinjer:
+// 1–2 h: 30–60 g/h, 2–3 h: 60–90 g/h, längre: upp mot 90–110 g/h (tränad mage).
+function fuelPlan(hours) {
+  if (hours <= 1) return null;
+  const [lo, hi] = hours <= 2 ? [30, 60] : hours <= 3 ? [60, 90] : [80, 110];
+  const round5 = g => Math.round(g / 5) * 5;
+  return { lo, hi, totLo: round5(lo * hours), totHi: round5(hi * hours) };
+}
+
 const STORE_KEY = "cykeltryck-v1";
 
 function defaultProfile(name) {
@@ -125,6 +147,7 @@ function loadStore() {
         bw: typeof s.bw === "number" ? s.bw : 75,
         active: Math.min(Math.max(0, s.active | 0), s.profiles.length - 1),
         opens: s.opens | 0,
+        rideH: typeof s.rideH === "number" ? s.rideH : 2,
         profiles: s.profiles.map(p => ({ ...defaultProfile(T.defaultBike), ...p })),
       };
     }
@@ -214,7 +237,7 @@ function Slider({ min, max, value, step, onChange }) {
 
 export default function CykelTryck() {
   const [store, setStore] = useState(() => {
-    const s = loadStore() ?? { bw: 75, active: 0, opens: 0, profiles: [defaultProfile(T.defaultBike)] };
+    const s = loadStore() ?? { bw: 75, active: 0, opens: 0, rideH: 2, profiles: [defaultProfile(T.defaultBike)] };
     return { ...s, opens: s.opens + 1 };
   });
   const [whyOpen, setWhyOpen] = useState(false);
@@ -260,6 +283,7 @@ export default function CykelTryck() {
   ];
 
   const PRESETS = [23,25,28,32,35,38,42,47,50,57,61,66];
+  const fuel = fuelPlan(store.rideH);
 
   const fBig = PSI_PRIMARY ? fPsi : fBar;
   const rBig = PSI_PRIMARY ? rPsi : rBar;
@@ -428,6 +452,42 @@ export default function CykelTryck() {
         </div>
 
         <Card style={{ marginTop:12 }}>
+          <CardTitle>{T.fuelTitle}</CardTitle>
+          <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+            <div style={{ minWidth:64 }}>
+              <div style={{ fontSize:30, fontWeight:800, color:"var(--accent)", lineHeight:1 }}>
+                {store.rideH.toFixed(1).replace(".", T.decimal)}
+              </div>
+              <div style={{ fontSize:11, color:"var(--text-m)" }}>{LANG === "sv" ? "timmar" : "hours"}</div>
+            </div>
+            <div style={{ flex:1 }}>
+              <Slider min={0.5} max={8} value={store.rideH} step={0.5} onChange={v => setStore(s => ({ ...s, rideH: parseFloat(v) }))} />
+              <div style={{ display:"flex", justifyContent:"space-between", fontSize:11, color:"var(--text-m)", marginTop:3 }}>
+                <span>0{T.decimal}5</span><span>8 h</span>
+              </div>
+            </div>
+          </div>
+          <div style={{ marginTop:12, paddingTop:12, borderTop:"1px solid var(--border)", fontSize:13, color:"var(--text-m)", lineHeight:1.5 }}>
+            {fuel ? (
+              <>
+                <strong style={{ color:"var(--text)", fontSize:16 }}>{fuel.totLo}–{fuel.totHi} {T.fuelCarbs}</strong>
+                {" "}({fuel.lo}–{fuel.hi} {T.fuelPerH})
+              </>
+            ) : T.fuelShort}
+          </div>
+          {fuel && (
+            <a href={CARBPLANNER_URL} target="_blank" rel="noopener noreferrer" style={{
+              display:"block", textAlign:"center", marginTop:12, padding:"11px 14px",
+              background:"var(--accent-bg)", border:"1px solid var(--accent)",
+              borderRadius:10, color:"var(--accent)", textDecoration:"none",
+              fontSize:14, fontWeight:600,
+            }}>
+              {T.fuelCta} →
+            </a>
+          )}
+        </Card>
+
+        <Card>
           <button onClick={() => setWhyOpen(v => !v)} aria-expanded={whyOpen} style={{
             display:"flex", alignItems:"center", justifyContent:"space-between", width:"100%",
             background:"none", border:"none", padding:0, cursor:"pointer",
@@ -445,8 +505,7 @@ export default function CykelTryck() {
           )}
         </Card>
 
-        {/* TODO: CarbPlanner är inte publicerad än — byt till riktig URL (apps.apple.com/se/app/carbplanner/idXXXXXXXXX) vid release */}
-        <a href="https://apps.apple.com/app/carbplanner" target="_blank" rel="noopener noreferrer"
+        <a href={CARBPLANNER_URL} target="_blank" rel="noopener noreferrer"
           style={{ display:"block", textDecoration:"none", marginTop:24, background:"var(--card)", border:"1px solid var(--border)", borderRadius:14, padding:"14px 18px" }}>
           <div style={{ display:"flex", alignItems:"center", gap:12 }}>
             <img src="/carbplanner-icon.png" alt="CarbPlanner" style={{ width:40, height:40, borderRadius:9 }} />
