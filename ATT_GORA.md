@@ -4,7 +4,7 @@ Bocka av med `[x]` allteftersom. Stegen är i rimlig ordning.
 
 ## 1. Engångsfix på datorn
 
-- [ ] Sätt din git-identitet (annars står "Cal Son" på dina commits):
+- [x] Sätt din git-identitet (annars står "Cal Son" på dina commits):
   ```
   git config --global user.name "Ditt Namn"
   git config --global user.email din@email.se
@@ -12,13 +12,14 @@ Bocka av med `[x]` allteftersom. Stegen är i rimlig ordning.
 
 ## 2. Publicera webbversionen (ger SEO + URL till integritetspolicyn)
 
-- [ ] Hosta appen, enklast Vercel eller Netlify (gratis). Bygg-kommando: `npm run build`, mapp: `dist`.
+- [x] Hosta appen, enklast Vercel eller Netlify (gratis). Bygg-kommando: `npm run build`, mapp: `dist`.
+      Live på https://bikepressure.vercel.app
 - [ ] Koppla en domän om du vill (valfritt – *.vercel.app funkar också).
-- [ ] Fyll i din riktiga adress i `index.html`: avkommentera raderna
+- [x] Fyll i din riktiga adress i `index.html`: avkommentera raderna
       `<link rel="canonical" ...>` och `<meta property="og:url" ...>`
       (sök på "TODO vid publicering") och bygg om.
-- [ ] Verifiera att `https://din-adress/privacy.html` fungerar – den URL:en
-      behövs i App Store Connect.
+- [x] Verifiera att `https://din-adress/privacy.html` fungerar – den URL:en
+      behövs i App Store Connect. → https://bikepressure.vercel.app/privacy.html
 
 ## 3. Skicka appen till App Store
 
