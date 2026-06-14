@@ -1,5 +1,5 @@
 {
-  "appId": "se.cykeltryck.app",
-  "appName": "Cykeltryck",
+  "appId": "app.bikepressure",
+  "appName": "Bikepressure",
   "webDir": "dist"
 }

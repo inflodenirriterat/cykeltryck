@@ -1,6 +1,6 @@
 {
-  "name": "Cykeltryck",
-  "short_name": "Cykeltryck",
+  "name": "Bikepressure",
+  "short_name": "Bikepressure",
   "description": "Rätt lufttryck för dina cykeldäck",
   "start_url": "/",
   "display": "standalone",

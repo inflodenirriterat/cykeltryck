@@ -5,12 +5,12 @@ const PSI_PRIMARY = LANG === "en";
 
 // TODO vid CarbPlanner-release: byt till riktig URL med kampanjparametrar för
 // attribution i App Store Connect, t.ex.
-// https://apps.apple.com/se/app/carbplanner/idXXXXXXXXX?pt=<provider-id>&ct=cykeltryck
+// https://apps.apple.com/se/app/carbplanner/idXXXXXXXXX?pt=<provider-id>&ct=bikepressure
 const CARBPLANNER_URL = "https://apps.apple.com/app/carbplanner";
 
 const STRINGS = {
   sv: {
-    title: "CYKELTRYCK", brand: "CykelTryck",
+    title: "BIKEPRESSURE", brand: "Bikepressure",
     tagline: "Rätt tryck · Bättre rull · Färre punkteringar",
     bikes: "Mina cyklar", name: "Namn", remove: "Ta bort",
     removeConfirm: "Ta bort den här cykeln?",
@@ -47,7 +47,7 @@ const STRINGS = {
     },
   },
   en: {
-    title: "BIKEPRESSURE", brand: "BikePressure",
+    title: "BIKEPRESSURE", brand: "Bikepressure",
     tagline: "Right pressure · Better rolling · Fewer flats",
     bikes: "My bikes", name: "Name", remove: "Remove",
     removeConfirm: "Remove this bike?",
@@ -235,7 +235,7 @@ function Slider({ min, max, value, step, onChange }) {
   );
 }
 
-export default function CykelTryck() {
+export default function Bikepressure() {
   const [store, setStore] = useState(() => {
     const s = loadStore() ?? { bw: 75, active: 0, opens: 0, rideH: 2, profiles: [defaultProfile(T.defaultBike)] };
     return { ...s, opens: s.opens + 1 };

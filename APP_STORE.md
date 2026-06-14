@@ -3,23 +3,23 @@
 Klistra in nedan i App Store Connect. Svenska under "Swedish", engelska under
 "English (U.S.)" / primärt språk.
 
-Integritetspolicy-URL: peka på `public/privacy.html` när webbappen är publicerad
-(t.ex. `https://<din-domän>/privacy.html`). I avsnittet "App Privacy" väljer du
-**"Data Not Collected"** — appen samlar inte in något.
+Integritetspolicy-URL: `https://bikepressure.vercel.app/privacy.html` (live).
+I avsnittet "App Privacy" väljer du **"Data Not Collected"** — appen samlar inte
+in något.
 
 ---
 
 ## Svenska
 
 ### Namn
-CykelTryck
+Bikepressure
 
 ### Undertitel (max 30 tecken)
 Rätt däcktryck på sekunder
 
 ### Beskrivning
 
-Rätt lufttryck gör cyklingen snabbare, bekvämare och säkrare. CykelTryck räknar
+Rätt lufttryck gör cyklingen snabbare, bekvämare och säkrare. Bikepressure räknar
 ut rekommenderat tryck fram och bak utifrån din vikt, cykeltyp, däckbredd,
 underlag och om du kör tubeless.
 
@@ -43,7 +43,7 @@ däcktryck,cykel,lufttryck,tubeless,gravel,mtb,landsväg,psi,bar,däck,pump,cykl
 ## English
 
 ### Name
-BikePressure
+Bikepressure
 
 ### Subtitle (max 30 characters)
 Right tire pressure in seconds
@@ -51,7 +51,7 @@ Right tire pressure in seconds
 ### Description
 
 The right tire pressure makes riding faster, more comfortable and safer.
-BikePressure calculates recommended front and rear pressures from your weight,
+Bikepressure calculates recommended front and rear pressures from your weight,
 bike type, tire width, surface and whether you run tubeless.
 
 • Research-based model (15% tire drop) calibrated against modern recommendations
@@ -74,4 +74,4 @@ tire pressure,bike,tyre,tubeless,gravel,mtb,road,psi,bar,cycling,pump,inflation
 ## App Privacy (App Store Connect)
 
 - Data collection: **Data Not Collected** (inget samlas in, inget lämnar enheten)
-- Privacy Policy URL: `https://<din-domän>/privacy.html`
+- Privacy Policy URL: `https://bikepressure.vercel.app/privacy.html`
