@@ -285,7 +285,7 @@ export default function Bikepressure() {
     : "default"
   ];
 
-  const PRESETS = [23,25,28,32,35,38,42,47,50,57,61,66];
+  const PRESETS = [23,25,28,32,35,38,40,45,50,57,61,66];
   const fuel = fuelPlan(store.rideH);
 
   const fBig = PSI_PRIMARY ? fPsi : fBar;
