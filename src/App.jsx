@@ -7,6 +7,9 @@ const PSI_PRIMARY = LANG === "en";
 // attribution i App Store Connect, t.ex.
 // https://apps.apple.com/se/app/carbplanner/idXXXXXXXXX?pt=<provider-id>&ct=bikepressure
 const CARBPLANNER_URL = "https://apps.apple.com/app/carbplanner";
+// Sätt till true när CarbPlanner är live i App Store. Tills dess göms både
+// bränsle-/kalkylatorkortet och CarbPlanner-reklamkortet (se render nedan).
+const CARBPLANNER_LIVE = false;
 
 const STRINGS = {
   sv: {
@@ -451,6 +454,7 @@ export default function Bikepressure() {
           </div>
         </div>
 
+        {CARBPLANNER_LIVE && (
         <Card style={{ marginTop:12 }}>
           <CardTitle>{T.fuelTitle}</CardTitle>
           <div style={{ display:"flex", alignItems:"center", gap:14 }}>
@@ -486,6 +490,7 @@ export default function Bikepressure() {
             </a>
           )}
         </Card>
+        )}
 
         <Card>
           <button onClick={() => setWhyOpen(v => !v)} aria-expanded={whyOpen} style={{
@@ -505,6 +510,7 @@ export default function Bikepressure() {
           )}
         </Card>
 
+        {CARBPLANNER_LIVE && (
         <a href={CARBPLANNER_URL} target="_blank" rel="noopener noreferrer"
           style={{ display:"block", textDecoration:"none", marginTop:24, background:"var(--card)", border:"1px solid var(--border)", borderRadius:14, padding:"14px 18px" }}>
           <div style={{ display:"flex", alignItems:"center", gap:12 }}>
@@ -516,6 +522,7 @@ export default function Bikepressure() {
             <div style={{ marginLeft:"auto", fontSize:18, color:"var(--text-m)" }}>›</div>
           </div>
         </a>
+        )}
 
         <div style={{ fontSize:11, color:"var(--text-m)", textAlign:"center", marginTop:16, marginBottom:24 }}>
           <div>{T.brand} · {T.footer}</div>

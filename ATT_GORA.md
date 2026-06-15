@@ -61,6 +61,10 @@ att installera.
 
 ## 4. När CarbPlanner släpps (kopplingen mellan apparna)
 
+> Bränsle-/kalkylatorkortet och CarbPlanner-reklamkortet är **gömda just nu**
+> (CarbPlanner är inte live än). De ligger kvar i koden bakom en flagga.
+
+- [ ] Sätt `CARBPLANNER_LIVE = true` överst i `src/App.jsx` för att visa korten igen.
 - [ ] Hämta CarbPlanners riktiga App Store-URL (med id-nummer).
 - [ ] Skapa en kampanjlänk i App Store Connect (provider-id finns under
       Users and Access → Provider).
