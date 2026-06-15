@@ -3,13 +3,21 @@ import { useEffect, useState } from "react";
 const LANG = (typeof navigator !== "undefined" && (navigator.language || "")).toLowerCase().startsWith("sv") ? "sv" : "en";
 const PSI_PRIMARY = LANG === "en";
 
-// TODO vid CarbPlanner-release: byt till riktig URL med kampanjparametrar för
-// attribution i App Store Connect, t.ex.
-// https://apps.apple.com/se/app/carbplanner/idXXXXXXXXX?pt=<provider-id>&ct=bikepressure
-const CARBPLANNER_URL = "https://apps.apple.com/app/carbplanner";
-// Sätt till true när CarbPlanner är live i App Store. Tills dess göms både
-// bränsle-/kalkylatorkortet och CarbPlanner-reklamkortet (se render nedan).
-const CARBPLANNER_LIVE = false;
+// Byt ut idXXXXXXXXX mot riktigt App Store-id och fyll i provider-id för attribution.
+const CARBPLANNER_STORE_URL = "https://apps.apple.com/se/app/carbplanner/idXXXXXXXXX?pt=PROVIDER_ID&ct=bikepressure";
+const CARBPLANNER_LIVE = true;
+
+function carbplannerUrl(fuel, rideH) {
+  const base = CARBPLANNER_STORE_URL;
+  if (!fuel) return base;
+  const params = new URLSearchParams({
+    carbs_lo: fuel.totLo,
+    carbs_hi: fuel.totHi,
+    duration_h: rideH,
+    source: "bikepressure",
+  });
+  return `${base}&${params}`;
+}
 
 const STRINGS = {
   sv: {
@@ -480,7 +488,7 @@ export default function Bikepressure() {
             ) : T.fuelShort}
           </div>
           {fuel && (
-            <a href={CARBPLANNER_URL} target="_blank" rel="noopener noreferrer" style={{
+            <a href={carbplannerUrl(fuel, store.rideH)} target="_blank" rel="noopener noreferrer" style={{
               display:"block", textAlign:"center", marginTop:12, padding:"11px 14px",
               background:"var(--accent-bg)", border:"1px solid var(--accent)",
               borderRadius:10, color:"var(--accent)", textDecoration:"none",
@@ -511,7 +519,7 @@ export default function Bikepressure() {
         </Card>
 
         {CARBPLANNER_LIVE && (
-        <a href={CARBPLANNER_URL} target="_blank" rel="noopener noreferrer"
+        <a href={carbplannerUrl(fuel, store.rideH)} target="_blank" rel="noopener noreferrer"
           style={{ display:"block", textDecoration:"none", marginTop:24, background:"var(--card)", border:"1px solid var(--border)", borderRadius:14, padding:"14px 18px" }}>
           <div style={{ display:"flex", alignItems:"center", gap:12 }}>
             <img src="/carbplanner-icon.png" alt="CarbPlanner" style={{ width:40, height:40, borderRadius:9 }} />

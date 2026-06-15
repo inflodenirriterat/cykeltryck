@@ -61,15 +61,14 @@ att installera.
 
 ## 4. När CarbPlanner släpps (kopplingen mellan apparna)
 
-> Bränsle-/kalkylatorkortet och CarbPlanner-reklamkortet är **gömda just nu**
-> (CarbPlanner är inte live än). De ligger kvar i koden bakom en flagga.
-
-- [ ] Sätt `CARBPLANNER_LIVE = true` överst i `src/App.jsx` för att visa korten igen.
-- [ ] Hämta CarbPlanners riktiga App Store-URL (med id-nummer).
-- [ ] Skapa en kampanjlänk i App Store Connect (provider-id finns under
-      Users and Access → Provider).
-- [ ] Byt `CARBPLANNER_URL` överst i `src/App.jsx` till:
-      `https://apps.apple.com/se/app/carbplanner/idXXXXXXXXX?pt=<provider-id>&ct=bikepressure`
+- [x] Sätt `CARBPLANNER_LIVE = true` — bränsle-/kalkylatorkortet och
+      CarbPlanner-reklamkortet är nu synliga.
+- [x] Implementera dynamisk URL: "Planera bränslet"-knappen skickar med
+      `carbs_lo`, `carbs_hi`, `duration_h` och `source=bikepressure` som
+      URL-parametrar till CarbPlanner.
+- [ ] **Fyll i riktiga värden i `src/App.jsx` → `CARBPLANNER_STORE_URL`:**
+      Byt `idXXXXXXXXX` mot rätt App Store-id och `PROVIDER_ID` mot
+      provider-id (finns i App Store Connect → Users and Access → Provider).
 - [ ] Kör `npm run build && npx cap copy ios`, committa, och skicka en
       app-uppdatering. Attributionen syns sedan i App Store Connect → Analytics.
 
