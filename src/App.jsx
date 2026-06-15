@@ -13,7 +13,7 @@ const CARBPLANNER_LIVE = false;
 
 const STRINGS = {
   sv: {
-    title: "BIKEPRESSURE", brand: "Bikepressure",
+    title: "CYKELTRYCK", brand: "Cykeltryck",
     tagline: "Rätt tryck · Bättre rull · Färre punkteringar",
     bikes: "Mina cyklar", name: "Namn", remove: "Ta bort",
     removeConfirm: "Ta bort den här cykeln?",
