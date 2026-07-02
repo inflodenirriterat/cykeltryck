@@ -36,6 +36,19 @@ Bocka av med `[x]` allteftersom. Stegen är i rimlig ordning.
       `manifest.json`), integritetspolicyn och App Store-texterna.
 - [x] Byggde om webben, körde `npx cap sync ios`, deployade och pushade.
 
+## 2c. App Store-förberedelser i koden (KLART – gjort av Claude, 2026-07-02)
+
+- [x] Beräkningsmodellen uppdaterad mot forskning (lägst rullmotstånd,
+      brytpunkt/impedans) och komfort/fart-slidern borttagen. Deployat.
+- [x] `Info.plist`: `ITSAppUsesNonExemptEncryption=false` (slipper
+      export compliance-frågan vid varje uppladdning), `CFBundleLocalizations`
+      (en + sv, så App Store visar båda språken), `arm64` i stället för
+      föråldrade `armv7`, iPhone låst till porträttläge (matchar layouten
+      och webbmanifestet).
+- [x] `APP_STORE.md` kompletterad med övriga obligatoriska ASC-fält
+      (support-URL, kategori, åldersgräns, copyright m.m.).
+- [x] `index.html`: absolut og:image-URL + SEO-text i linje med nya modellen.
+
 ## 3. Skicka appen till App Store
 
 Förberett: iOS-bygget är synkat. Capacitor 8 använder **Swift Package Manager**
@@ -53,10 +66,14 @@ att installera.
 - [ ] I App Store Connect: skapa appen (bundle-ID `app.bikepressure`, namn
       **Bikepressure**) och klistra in texterna från `APP_STORE.md` (namn,
       undertitel, beskrivning, nyckelord – svenska och engelska finns där).
+- [ ] Fyll i övriga fält från `APP_STORE.md`: support-URL, kategori (Sports),
+      åldersgräns (4+), copyright och pris (gratis).
 - [ ] App Privacy: välj **"Data Not Collected"**.
 - [ ] Privacy Policy URL: `https://bikepressure.vercel.app/privacy.html`.
 - [ ] Skärmbilder: första bilden ska visa resultatpanelen med tryck (det är
       den folk ser i sökresultaten). Tas i simulatorn (⌘S) eller på din iPhone.
+      **Obs:** appen stödjer iPad, så det behövs skärmbilder för både iPhone
+      (6,9") och iPad (13") – ta dem i respektive simulator.
 - [ ] Skicka in för granskning (Apple-review tar oftast 1–3 dygn).
 
 ## 4. När CarbPlanner släpps (kopplingen mellan apparna)

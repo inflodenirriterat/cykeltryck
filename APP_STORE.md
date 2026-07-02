@@ -75,3 +75,19 @@ tire pressure,bike,tyre,tubeless,gravel,mtb,road,psi,bar,cycling,pump,inflation
 
 - Data collection: **Data Not Collected** (inget samlas in, inget lämnar enheten)
 - Privacy Policy URL: `https://bikepressure.vercel.app/privacy.html`
+
+---
+
+## Övriga obligatoriska fält i App Store Connect
+
+- **Support URL:** `https://bikepressure.vercel.app` (obligatoriskt fält, webben duger)
+- **Marketing URL (valfritt):** `https://bikepressure.vercel.app`
+- **Primär kategori:** Sports (alternativ: Utilities)
+- **Åldersgräns (Age Rating):** svara nej på alla frågor → **4+**
+- **Copyright:** `© 2026 <ditt namn>`
+- **Priser:** Gratis, alla länder
+- **Export compliance:** hanteras automatiskt — `ITSAppUsesNonExemptEncryption=false`
+  ligger i Info.plist (appen använder bara vanlig HTTPS), så frågan ställs inte
+  vid uppladdning.
+- **App Review-noteringar (valfritt):** "Utility calculator, works fully offline,
+  no login needed."
