@@ -24,9 +24,9 @@ ut rekommenderat tryck fram och bak utifrån din vikt, cykeltyp, däckbredd,
 underlag och om du kör tubeless.
 
 • Forskningsbaserad modell (15 % tire drop) kalibrerad mot moderna rekommendationer
+• Siktar på trycket med lägst rullmotstånd – hårdare däck är inte snabbare
 • Separata tryck för fram- och bakhjul, i bar och psi
 • Spara flera cyklar som profiler och växla med ett tryck
-• Finjustera mot komfort eller fart
 • Varnar vid tryck över hookless-gränsen
 • Fungerar helt offline – ingen data samlas in
 
@@ -55,9 +55,9 @@ Bikepressure calculates recommended front and rear pressures from your weight,
 bike type, tire width, surface and whether you run tubeless.
 
 • Research-based model (15% tire drop) calibrated against modern recommendations
+• Targets the pressure with the lowest rolling resistance – harder tires are not faster
 • Separate front and rear pressures, in psi and bar
 • Save multiple bikes as profiles and switch with one tap
-• Fine-tune toward comfort or speed
 • Warns when pressure exceeds the hookless rim limit
 • Works fully offline – no data collected
 

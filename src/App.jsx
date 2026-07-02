@@ -22,15 +22,15 @@ const STRINGS = {
     bikeType: "Cykeltyp", road: "Landsväg", gravel: "Gravel", mtb: "MTB", city: "Stad/Hybrid",
     tireWidth: "Däckbredd", tubeless: "Tubeless", tubelessSub: "Kör du utan slang?",
     surface: "Underlag", asphalt: "Asfalt", mixed: "Blandat", offroad: "Grus/Trail",
-    tune: "Finjustering", comfort: "Komfort", speed: "Fart",
     recommended: "Rekommenderat lufttryck", front: "Fram", rear: "Bak", tipLabel: "Tips:",
     whyTitle: "Varför detta tryck?",
     whyBody: [
-      "Målet är cirka 15 % nedsjunkning av däcket under belastning. Publicerade mätningar visar att det ger den bästa balansen mellan rullmotstånd, komfort och grepp.",
+      "Målet är cirka 15 % nedsjunkning (tire drop) av däcket under belastning. Fältmätningar visar att det ligger nära trycket där det totala rullmotståndet är som lägst – alltså där du rullar snabbast.",
+      "Mer tryck gör dig inte snabbare. På en slät labbtrumma rullar hårda däck fortast, men på riktig väg tar vibrationsförluster (impedans) över ovanför en brytpunkt: cykel och kropp skakar, och rullmotståndet ökar igen. Några psi under brytpunkten är dessutom snabbare än några psi över – därför siktar rekommendationen aldrig högt.",
       "Bredare däck behöver lägre tryck för samma nedsjunkning – därför sjunker rekommendationen snabbt när däckbredden ökar.",
       "Bakhjulet bär mer av din vikt än framhjulet och får därför något högre tryck.",
       "Tubeless kan köras med lägre tryck eftersom det inte finns någon slang som kan klämmas mot fälgen (snake bite).",
-      "På ojämnt underlag ger lägre tryck bättre grepp och komfort – och ofta även lägre rullmotstånd, eftersom däcket följer ytan i stället för att studsa.",
+      "På ojämnt underlag ligger brytpunkten lägre – där ger lägre tryck både bättre grepp, bättre komfort och lägre rullmotstånd, eftersom däcket följer ytan i stället för att studsa.",
     ],
     fuelTitle: "Bränsle för turen", rideLength: "Turlängd",
     fuelShort: "Under en timme behövs normalt inget extra bränsle – vatten räcker.",
@@ -59,15 +59,15 @@ const STRINGS = {
     bikeType: "Bike type", road: "Road", gravel: "Gravel", mtb: "MTB", city: "City/Hybrid",
     tireWidth: "Tire width", tubeless: "Tubeless", tubelessSub: "Running without tubes?",
     surface: "Surface", asphalt: "Asphalt", mixed: "Mixed", offroad: "Gravel/Trail",
-    tune: "Fine-tune", comfort: "Comfort", speed: "Speed",
     recommended: "Recommended pressure", front: "Front", rear: "Rear", tipLabel: "Tip:",
     whyTitle: "Why this pressure?",
     whyBody: [
-      "The target is roughly 15% tire drop under load. Published measurements show this gives the best balance of rolling resistance, comfort and grip.",
+      "The target is roughly 15% tire drop under load. Field measurements show this sits close to the pressure where total rolling resistance is lowest – i.e. where you roll fastest.",
+      "More pressure does not make you faster. On a smooth lab drum hard tires roll fastest, but on real roads vibration losses (impedance) take over above a breakpoint: bike and body start shaking, and rolling resistance rises again. A few psi below the breakpoint is also faster than a few psi above – so the recommendation never aims high.",
       "Wider tires need lower pressure for the same tire drop – which is why the recommendation falls quickly as tire width grows.",
       "The rear wheel carries more of your weight than the front, so it gets slightly higher pressure.",
       "Tubeless can be run at lower pressure since there is no inner tube to pinch against the rim (snake bite).",
-      "On rough surfaces, lower pressure gives better grip and comfort – and often lower rolling resistance too, since the tire follows the surface instead of bouncing.",
+      "On rough surfaces the breakpoint sits lower – there, lower pressure gives better grip, better comfort and lower rolling resistance, since the tire follows the surface instead of bouncing.",
     ],
     fuelTitle: "Fuel for the ride", rideLength: "Ride length",
     fuelShort: "Under an hour you normally don't need extra fuel – water is enough.",
@@ -95,24 +95,32 @@ if (typeof document !== "undefined") {
   document.title = T.brand;
 }
 
-// Tryckmodell: P ∝ systemvikt / däckbredd^1.5 — följer Frank Bertos
-// 15 % tire drop-data (validerad 20–37 mm) och är kalibrerad mot
-// SRAM AXS/Silca-rekommendationer vid 85 kg systemvikt (tubeless, asfalt).
+// Tryckmodell: siktar på trycket med lägst totalt rullmotstånd. På riktig väg
+// finns en brytpunkt (Silca/Tom Anhalt) där vibrationsförluster (impedans) tar
+// över – mer tryck än så gör dig långsammare, därför finns ingen fartjustering
+// uppåt. Basen är ~15 % tire drop enligt Frank Bertos mätdata:
+// P ∝ systemvikt / däckbredd^1.58, där exponenten kommer från Anhalts
+// kurvanpassning av Berto-datat. Kalibrerad mot SRAM AXS/Silca-
+// rekommendationer vid 85 kg systemvikt (28 mm ≈ 70 psi, tubeless, asfalt).
 // Fram/bak-skillnaden hålls liten (≈ ±4 %) i linje med SRAM:s riktlinje
 // om 3–7 psi mellanskillnad, i stället för att skala rakt av lastfördelningen.
-const REF_WEIGHT = 85;   // kg systemvikt där basvärdet gäller
-const BASE_K     = 10400; // ger ~70 psi för 28 mm vid 85 kg
+const REF_WEIGHT = 85;    // kg systemvikt där basvärdet gäller
+const BASE_K     = 13500; // ger ~70 psi för 28 mm vid 85 kg
+const WIDTH_EXP  = 1.58;  // Anhalts fit av Bertos 15 %-data
 const SPLITS = { road:{f:0.96,r:1.04}, gravel:{f:0.96,r:1.04}, mtb:{f:0.96,r:1.04}, city:{f:0.93,r:1.07} };
 const SM     = { asphalt:1.0, mixed:0.92, offroad:0.84 };
+// MTB: nominell bredd inkluderar knaster och stommen är grövre, så ren
+// Berto-extrapolering hamnar under SRAM:s MTB-värden – justeras upp något.
+const TYPE_ADJ = { road:1.0, gravel:1.0, mtb:1.12, city:1.0 };
 const TUBE_FACTOR = 1.08; // SRAM: +4–6 psi med slang för att undvika snake bites
 const FL     = { road:35, gravel:18, mtb:12, city:28 };
 const CE     = { road:110, gravel:70, mtb:40, city:85 };
 const HOOKLESS_LIMIT_PSI = 72.5;
 
-function calcP(bw, biw, bt, tw, sf, tl, bias) {
+function calcP(bw, biw, bt, tw, sf, tl) {
   const tot  = bw + biw;
-  const base = BASE_K / Math.pow(tw, 1.5) * (tot / REF_WEIGHT) * SM[sf]
-             * (tl ? 1 : TUBE_FACTOR) * (1 + bias / 100);
+  const base = BASE_K / Math.pow(tw, WIDTH_EXP) * (tot / REF_WEIGHT) * SM[sf]
+             * TYPE_ADJ[bt] * (tl ? 1 : TUBE_FACTOR);
   let fP = base * SPLITS[bt].f;
   let rP = base * SPLITS[bt].r;
   const capped = rP > CE[bt] || fP > CE[bt];
@@ -139,7 +147,7 @@ function fuelPlan(hours) {
 const STORE_KEY = "cykeltryck-v1";
 
 function defaultProfile(name) {
-  return { name, biw: 10.0, bt: "road", tw: 28, sf: "asphalt", tl: false, bias: 0 };
+  return { name, biw: 10.0, bt: "road", tw: 28, sf: "asphalt", tl: false };
 }
 
 function loadStore() {
@@ -151,7 +159,11 @@ function loadStore() {
         active: Math.min(Math.max(0, s.active | 0), s.profiles.length - 1),
         opens: s.opens | 0,
         rideH: typeof s.rideH === "number" ? s.rideH : 2,
-        profiles: s.profiles.map(p => ({ ...defaultProfile(T.defaultBike), ...p })),
+        profiles: s.profiles.map(p => {
+          const merged = { ...defaultProfile(T.defaultBike), ...p };
+          delete merged.bias; // fanns i äldre lagrade profiler (komfort/fart-slidern)
+          return merged;
+        }),
       };
     }
   } catch { /* korrupt lagring → börja om */ }
@@ -272,8 +284,8 @@ export default function Bikepressure() {
   };
 
   const { bw } = store;
-  const { biw, bt, tw, sf, tl, bias } = p;
-  const { fBar, rBar, fPsi, rPsi, capped } = calcP(bw, biw, bt, tw, sf, tl, bias);
+  const { biw, bt, tw, sf, tl } = p;
+  const { fBar, rBar, fPsi, rPsi, capped } = calcP(bw, biw, bt, tw, sf, tl);
   const total = bw + biw;
 
   const tip = T.tips[
@@ -414,18 +426,6 @@ export default function Bikepressure() {
             <SegBtn active={sf==="asphalt"} onClick={() => setP({ sf: "asphalt" })} emoji="🛣️"  label={T.asphalt} />
             <SegBtn active={sf==="mixed"}   onClick={() => setP({ sf: "mixed" })}   emoji="🌿"  label={T.mixed} />
             <SegBtn active={sf==="offroad"} onClick={() => setP({ sf: "offroad" })} emoji="🏔️" label={T.offroad} />
-          </div>
-        </Card>
-
-        <Card>
-          <CardTitle>{T.tune}</CardTitle>
-          <Slider min={-5} max={5} value={bias} step={1} onChange={v => setP({ bias: parseInt(v) })} />
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", fontSize:12, color:"var(--text-m)", marginTop:4 }}>
-            <span>← {T.comfort}</span>
-            <strong style={{ color: bias === 0 ? "var(--text-m)" : "var(--accent)", fontSize:13 }}>
-              {bias > 0 ? "+" : ""}{bias} %
-            </strong>
-            <span>{T.speed} →</span>
           </div>
         </Card>
 
