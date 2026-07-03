@@ -101,8 +101,15 @@ att installera.
 
 ## Övrigt
 
-- [ ] Kontaktadressen i `public/privacy.html` är din iCloud-adress – byt om du
-      hellre använder en annan mejl.
+- [x] Kontaktadressen i `public/privacy.html` uppdaterad till
+      `info.calson@icloud.com` (2026-07-03).
+- [ ] Support-mejl i App Store Connect (fältet "Support URL" pekar redan på
+      webben, men om du anger en supportadress separat: använd
+      `info.calson@icloud.com`).
+- [ ] (Valfritt, ej krav för release) Git-identiteten för det här repot står
+      fortfarande på den gamla iCloud-adressen (se punkt 1) – uppdatera med
+      `git config user.email info.calson@icloud.com` om du vill att nya
+      commits ska visa den nya adressen.
 - [ ] (Bara om du vill) Bundle-ID är `app.bikepressure`, ett fritt valt ID. Vill
       du hellre ha t.ex. `com.dittnamn.bikepressure` måste det bytas **innan**
       första uppladdningen till App Store Connect.
