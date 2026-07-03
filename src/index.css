@@ -38,10 +38,26 @@ body {
   margin: 0;
 }
 
-.app-header {
-  padding-top: env(safe-area-inset-top, 0px);
+.num-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed var(--border);
+  outline: none;
+  font-family: inherit;
+  padding: 0 0 2px;
+  transition: border-color 0.15s;
 }
 
-.app-bottom {
-  padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+.num-input:focus {
+  border-bottom: 1px solid var(--accent);
+}
+
+.num-input::-webkit-outer-spin-button,
+.num-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.num-input {
+  -moz-appearance: textfield;
 }

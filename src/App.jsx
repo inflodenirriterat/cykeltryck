@@ -250,6 +250,39 @@ function Slider({ min, max, value, step, onChange }) {
   );
 }
 
+// Redigerbart sifferfält bredvid slidern – klampar och rundar bara vid blur,
+// inte under skrivning, så man kan t.ex. skriva "45" siffra för siffra utan
+// att mellanvärdet klipps mot min/max.
+function NumField({ value, min, max, step, decimals = 0, onCommit, width, style, ariaLabel }) {
+  const [text, setText] = useState(() => value.toFixed(decimals));
+  const [synced, setSynced] = useState(value);
+  if (value !== synced) {
+    setSynced(value);
+    setText(value.toFixed(decimals));
+  }
+  const commit = () => {
+    let n = parseFloat(text.replace(",", "."));
+    if (Number.isNaN(n)) n = value;
+    n = parseFloat(Math.min(max, Math.max(min, n)).toFixed(decimals));
+    setText(n.toFixed(decimals));
+    if (n !== value) onCommit(n);
+  };
+  return (
+    <input
+      className="num-input"
+      type="number"
+      inputMode="decimal"
+      step={step}
+      value={text}
+      aria-label={ariaLabel}
+      onChange={e => setText(e.target.value)}
+      onBlur={commit}
+      onKeyDown={e => { if (e.key === "Enter") e.currentTarget.blur(); }}
+      style={{ width, ...style }}
+    />
+  );
+}
+
 export default function Bikepressure() {
   const [store, setStore] = useState(() => {
     const s = loadStore() ?? { bw: 75, active: 0, opens: 0, rideH: 2, profiles: [defaultProfile(T.defaultBike)] };
@@ -307,9 +340,9 @@ export default function Bikepressure() {
 
   return (
     <div style={{ background:"var(--bg)", minHeight:"100vh", color:"var(--text)", fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif", fontSize:16 }}>
-      <div className="app-bottom" style={{ maxWidth:460, margin:"0 auto", padding:"0 16px 0" }}>
+      <div className="app-bottom" style={{ maxWidth:460, margin:"0 auto", padding:"0 16px", paddingBottom:"calc(env(safe-area-inset-bottom, 0px) + 60px)" }}>
 
-        <div className="app-header" style={{ background:"var(--h-grad)", margin:"0 -16px", padding:"32px 16px 24px", marginBottom:16 }}>
+        <div className="app-header" style={{ background:"var(--h-grad)", margin:"0 -16px", padding:"0 16px 24px", paddingTop:"calc(env(safe-area-inset-top, 20px) + 12px)", marginBottom:16 }}>
           <div style={{ textAlign:"center" }}>
             <div style={{ fontSize:30, fontWeight:800, letterSpacing:5, color:"var(--h-text)" }}>{T.title}</div>
             <div style={{ fontSize:11, color:"var(--h-text-soft)", letterSpacing:1, marginTop:5, textTransform:"uppercase" }}>{T.tagline}</div>
@@ -349,8 +382,11 @@ export default function Bikepressure() {
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
             <div>
               <div style={{ fontSize:12, color:"var(--text-m)", marginBottom:5 }}>{T.bodyWeight}</div>
-              <div style={{ fontSize:38, fontWeight:800, color:"var(--accent)", lineHeight:1, marginBottom:8 }}>
-                {bw}<span style={{ fontSize:13, color:"var(--text-m)", fontWeight:400, marginLeft:3 }}>kg</span>
+              <div style={{ display:"flex", alignItems:"baseline", marginBottom:8 }}>
+                <NumField value={bw} min={40} max={150} step={1} decimals={0} onCommit={setBw}
+                  width="3.4ch" ariaLabel={T.bodyWeight}
+                  style={{ fontSize:38, fontWeight:800, color:"var(--accent)", lineHeight:1 }} />
+                <span style={{ fontSize:13, color:"var(--text-m)", fontWeight:400, marginLeft:3 }}>kg</span>
               </div>
               <Slider min={40} max={150} value={bw} step={1} onChange={v => setBw(parseInt(v))} />
               <div style={{ display:"flex", justifyContent:"space-between", fontSize:11, color:"var(--text-m)", marginTop:3 }}>
@@ -359,8 +395,11 @@ export default function Bikepressure() {
             </div>
             <div>
               <div style={{ fontSize:12, color:"var(--text-m)", marginBottom:5 }}>{T.bikeGear}</div>
-              <div style={{ fontSize:38, fontWeight:800, color:"var(--accent)", lineHeight:1, marginBottom:8 }}>
-                {biw.toFixed(1)}<span style={{ fontSize:13, color:"var(--text-m)", fontWeight:400, marginLeft:3 }}>kg</span>
+              <div style={{ display:"flex", alignItems:"baseline", marginBottom:8 }}>
+                <NumField value={biw} min={5} max={30} step={0.1} decimals={1} onCommit={v => setP({ biw: v })}
+                  width="3.8ch" ariaLabel={T.bikeGear}
+                  style={{ fontSize:38, fontWeight:800, color:"var(--accent)", lineHeight:1 }} />
+                <span style={{ fontSize:13, color:"var(--text-m)", fontWeight:400, marginLeft:3 }}>kg</span>
               </div>
               <Slider min={5} max={30} value={biw} step={0.1} onChange={v => setP({ biw: parseFloat(v) })} />
               <div style={{ display:"flex", justifyContent:"space-between", fontSize:11, color:"var(--text-m)", marginTop:3 }}>
@@ -400,7 +439,9 @@ export default function Bikepressure() {
           </div>
           <div style={{ display:"flex", alignItems:"center", gap:14 }}>
             <div style={{ minWidth:52 }}>
-              <div style={{ fontSize:30, fontWeight:800, color:"var(--accent)", lineHeight:1 }}>{tw}</div>
+              <NumField value={tw} min={18} max={75} step={1} decimals={0} onCommit={v => setP({ tw: v })}
+                width="3ch" ariaLabel={T.tireWidth}
+                style={{ fontSize:30, fontWeight:800, color:"var(--accent)", lineHeight:1 }} />
               <div style={{ fontSize:11, color:"var(--text-m)" }}>mm{tw >= 45 ? ` · ${(tw / 25.4).toFixed(1).replace(".", T.decimal)}"` : ""}</div>
             </div>
             <div style={{ flex:1 }}>
